@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createMagicLink } from '@/lib/auth';
+import { createMagicLink } from '../../../../lib/auth';
 
 // Rate limiting map
 const rateLimitMap = new Map<string, number>();
