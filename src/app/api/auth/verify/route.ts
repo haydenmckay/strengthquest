@@ -20,8 +20,19 @@ export async function POST(request: Request) {
       );
     }
 
-    await createSession(userId);
-    return NextResponse.json({ success: true });
+    const sessionToken = await createSession(userId);
+    
+    if (!sessionToken) {
+      return NextResponse.json(
+        { error: 'Failed to create session' },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ 
+      success: true,
+      token: sessionToken
+    });
   } catch (error) {
     console.error('Verification error:', error);
     return NextResponse.json(

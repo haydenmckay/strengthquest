@@ -49,18 +49,15 @@ export async function createMagicLink(email: string) {
       .sign(JWT_SECRET)
 
     // Create magic link
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? process.env.NEXT_PUBLIC_PRODUCTION_URL 
-      : process.env.NEXT_PUBLIC_APP_URL;
-    const magicLink = `${baseUrl}/auth/verify?token=${token}`;
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const magicLink = `${baseUrl}/auth/verify?token=${encodeURIComponent(token)}`
 
     console.log('Sending magic link email:', {
       to: email,
       magicLink,
       baseUrl,
-      environment: process.env.NODE_ENV,
-      apiKey: process.env.RESEND_API_KEY ? 'Set' : 'Not set'
-    });
+      environment: process.env.NODE_ENV
+    })
 
     // Send email
     const result = await resend.emails.send({
@@ -74,9 +71,12 @@ export async function createMagicLink(email: string) {
         <p style="color: #666; font-size: 14px;">If the button doesn't work, copy and paste this link into your browser:</p>
         <p style="color: #666; font-size: 14px;">${magicLink}</p>
       `
-    });
+    })
 
-    console.log('Resend API response:', result)
+    if (!result?.id) {
+      throw new Error('Failed to send email')
+    }
+
     return true
   } catch (error) {
     console.error('Error in createMagicLink:', error)
