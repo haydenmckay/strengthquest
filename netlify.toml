@@ -7,11 +7,4 @@
   NEXT_PRIVATE_TARGET = "server"
 
 [[plugins]]
-  package = "@netlify/plugin-nextjs"
-
-# Ensure SQLite database is included
-[[plugins]]
-  package = "netlify-plugin-copy-file"
-  [plugins.inputs]
-    source = "prisma/production/prod.db"
-    target = ".next/server/chunks/prod.db" 
+  package = "@netlify/plugin-nextjs" 
