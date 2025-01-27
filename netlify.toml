@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build && mkdir -p .next/server/chunks && cp prisma/production/prod.db .next/server/chunks/"
+  command = "npm install && npx tailwindcss init -p && npm run build && mkdir -p .next/server/chunks && cp prisma/production/prod.db .next/server/chunks/"
   publish = ".next"
 
 [build.environment]
