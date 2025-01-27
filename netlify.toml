@@ -1,17 +1,8 @@
 [build]
   command = "CI=false npm run build"
   publish = "out"
-  ignore = "git diff --quiet $CACHED_COMMIT_REF $COMMIT_REF ./package-lock.json"
 
 [build.environment]
-  NEXT_USE_NETLIFY_EDGE = "true"
-  NEXT_PRIVATE_TARGET = "static"
-  NEXT_TELEMETRY_DISABLED = "1"
   NODE_ENV = "production"
   NEXT_PUBLIC_APP_URL = "https://strengthquest.netlify.app"
-  NEXT_STATIC_EXPORT = "true"
-
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
-  [plugins.inputs]
-    skipBuild = true 
+  NEXT_STATIC_EXPORT = "true" 
