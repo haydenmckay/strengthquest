@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '../../../../lib/prisma';
-import { hashPassword } from '../../../../lib/auth';
-import { createSession } from '@/lib/auth';
+import { hashPassword, createSession } from '../../../../lib/auth';
 
 export async function POST(request: Request) {
   try {
@@ -32,7 +31,7 @@ export async function POST(request: Request) {
     const user = await prisma.user.create({
       data: {
         email,
-        password: hashedPassword,
+        passwordHash: hashedPassword,
         name,
         exercises: {
           create: [
