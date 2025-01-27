@@ -3,10 +3,15 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Bars3Icon, XMarkIcon, Cog6ToothIcon, UserCircleIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline';
+import { useAuth } from '../../lib/contexts/AuthContext';
 
 export const Menu = () => {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
+  const { user, loading } = useAuth();
+
+  // Don't render the menu if loading or not authenticated
+  if (loading || !user) return null;
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);

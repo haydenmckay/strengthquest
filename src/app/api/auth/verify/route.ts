@@ -3,15 +3,18 @@ import { createSession, verifyJWT } from '../../../../lib/auth';
 
 export async function POST(request: Request) {
   try {
-    const { token } = await request.json();
-
-    if (!token) {
+    // First try to parse the request body
+    const body = await request.json().catch(() => null);
+    if (!body || !body.token) {
       return NextResponse.json(
-        { error: 'Token is required' },
+        { success: false, error: 'Token is required' },
         { status: 400 }
       );
     }
 
+    const { token } = body;
+
+    // Verify the JWT token
     const userId = await verifyJWT(token);
     if (!userId) {
       return NextResponse.json(
@@ -20,8 +23,8 @@ export async function POST(request: Request) {
       );
     }
 
+    // Create a new session
     const sessionToken = await createSession(userId);
-    
     if (!sessionToken) {
       return NextResponse.json(
         { success: false, error: 'Failed to create session' },
@@ -29,10 +32,12 @@ export async function POST(request: Request) {
       );
     }
 
+    // Return success response
     return NextResponse.json({ 
       success: true,
       token: sessionToken
     }, { status: 200 });
+
   } catch (error) {
     console.error('Verification error:', error);
     return NextResponse.json(

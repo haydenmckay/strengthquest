@@ -5,6 +5,8 @@ interface User {
   id: string;
   email: string;
   name: string | null;
+  weightUnit?: string;
+  barbellWeight?: number;
 }
 
 interface AuthContextType {
@@ -13,11 +15,13 @@ interface AuthContextType {
   error: string | null;
 }
 
-export const AuthContext = createContext<AuthContextType>({
+const defaultContext: AuthContextType = {
   user: null,
   loading: true,
   error: null,
-});
+};
+
+export const AuthContext = createContext<AuthContextType>(defaultContext);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -37,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } catch (err) {
         setError('Failed to fetch session');
+        console.error('Session check error:', err);
       } finally {
         setLoading(false);
       }
@@ -45,9 +50,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkSession();
   }, []);
 
+  const value = {
+    user,
+    loading,
+    error,
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, error }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
-} 
+}
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}; 

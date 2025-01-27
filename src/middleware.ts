@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { jwtVerify } from 'jose'
 import { rateLimit } from './lib/rateLimit'
+import { cookies } from 'next/headers'
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'default-secret-key')
 const COOKIE_NAME = process.env.COOKIE_NAME || 'strengthquest_session'
@@ -18,6 +19,10 @@ const publicRoutes = [
   '/api/auth/session',
   '/auth/verify'
 ]
+
+// Add routes that require authentication
+const protectedRoutes = ['/settings', '/profile', '/workouts']
+const authRoutes = ['/login', '/signup']
 
 export async function middleware(request: NextRequest) {
   // Skip authentication in development
@@ -53,25 +58,23 @@ export async function middleware(request: NextRequest) {
     return response
   }
 
-  // Handle authentication for protected routes
-  if (request.nextUrl.pathname.startsWith('/dashboard') ||
-      request.nextUrl.pathname.startsWith('/profile')) {
-    const token = request.cookies.get(COOKIE_NAME)?.value
+  const cookieStore = cookies()
+  const token = cookieStore.get(COOKIE_NAME)?.value
 
-    if (!token) {
-      const url = new URL('/login', request.url)
-      url.searchParams.set('from', request.nextUrl.pathname)
-      return NextResponse.redirect(url)
-    }
+  // Check if the route requires authentication
+  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
+  const isAuthRoute = authRoutes.some(route => pathname.startsWith(route))
 
-    try {
-      await jwtVerify(token, JWT_SECRET)
-      return NextResponse.next()
-    } catch {
-      const url = new URL('/login', request.url)
-      url.searchParams.set('from', request.nextUrl.pathname)
-      return NextResponse.redirect(url)
-    }
+  // Redirect to login if accessing protected route without token
+  if (isProtectedRoute && !token) {
+    const redirectUrl = new URL('/login', request.url)
+    redirectUrl.searchParams.set('redirect', pathname)
+    return NextResponse.redirect(redirectUrl)
+  }
+
+  // Redirect to home if accessing auth routes with token
+  if (isAuthRoute && token) {
+    return NextResponse.redirect(new URL('/', request.url))
   }
 
   return NextResponse.next()
@@ -79,8 +82,13 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    '/api/:path*',
-    '/dashboard/:path*',
-    '/profile/:path*'
-  ]
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+  ],
 } 

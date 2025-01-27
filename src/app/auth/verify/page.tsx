@@ -24,19 +24,33 @@ export default function VerifyPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token })
-        })
+        });
 
-        const data = await res.json().catch(() => ({ success: false, error: 'Invalid response from server' }));
-
-        if (!res.ok || !data.success) {
-          throw new Error(data.error || 'Verification failed')
+        // Try to parse the response as JSON, with a fallback for invalid JSON
+        let data;
+        try {
+          data = await res.json();
+        } catch (e) {
+          console.error('Failed to parse response:', e);
+          throw new Error('Invalid response from server');
         }
 
-        setStatus('success')
+        // Check both the response status and success flag
+        if (!res.ok || !data.success) {
+          throw new Error(data.error || 'Verification failed');
+        }
+
+        // Store the session token if provided
+        if (data.token) {
+          // You might want to store this in a cookie or handle it differently
+          console.log('Session token received');
+        }
+
+        setStatus('success');
         setTimeout(() => {
-          router.push('/')
-          router.refresh()
-        }, 2000)
+          router.push('/');
+          router.refresh();
+        }, 2000);
       } catch (error) {
         console.error('Verification error:', error)
         setStatus('error')
