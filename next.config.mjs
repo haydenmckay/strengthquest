@@ -11,7 +11,6 @@ const nextConfig = {
     ],
     dangerouslyAllowSVG: true,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
-    unoptimized: true,
   },
   typescript: {
     ignoreBuildErrors: true,
@@ -19,12 +18,7 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  swcMinify: true,
-  output: 'export',
-  distDir: 'out',
-  experimental: {
-    serverActions: false
-  }
+  swcMinify: true
 };
 
 export default nextConfig;
