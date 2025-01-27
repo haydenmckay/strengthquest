@@ -1,0 +1,21 @@
+[33mcommit e83ba62f7d1cb481c72f466792769fb457b818b9[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m
+Author: haydenmckay <haydenmckay@gmail.com>
+Date:   Tue Jan 28 10:40:22 2025 +1100
+
+    Enhance authentication flow with better error handling and logging
+
+.env.development
+.env.example
+.env.production
+.gitignore
+package-lock.json
+package.json
+scripts/migrate.js
+src/app/api/auth/verify/route.ts
+src/app/api/db-migration/route.ts
+src/lib/auth.ts
+src/lib/db.ts
+src/lib/migration.ts
+src/lib/schema.ts
+src/middleware.ts
+vercel.json
