@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { Logo } from '@/app/components/Logo'
+import Logo from '../../../components/Logo'
 
 export default function VerifyPage() {
   const router = useRouter()
