@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npx prisma generate && next build && mkdir -p .next/server/chunks && cp prisma/production/prod.db .next/server/chunks/",
+    "build": "npx prisma generate && next build && cp -r prisma/production/prod.db .next/",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate"

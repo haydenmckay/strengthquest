@@ -19,7 +19,11 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   swcMinify: true,
-  output: 'standalone',
+  output: 'export',
+  distDir: '.next',
+  experimental: {
+    serverActions: false
+  }
 };
 
 export default nextConfig;
