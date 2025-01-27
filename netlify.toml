@@ -1,19 +1,13 @@
 [build]
-  command = """
-    export NODE_ENV=production &&
-    npm ci &&
-    npx prisma generate &&
-    npm run build -- --no-lint &&
-    mkdir -p .next/server/chunks &&
-    cp prisma/production/prod.db .next/server/chunks/
-  """
+  command = "npm run build"
   publish = ".next"
 
 [build.environment]
   NEXT_USE_NETLIFY_EDGE = "true"
   NEXT_PRIVATE_TARGET = "server"
   NEXT_TELEMETRY_DISABLED = "1"
-  SKIP_TYPE_CHECK = "1"
+  NODE_ENV = "production"
+  NEXT_PUBLIC_APP_URL = "https://strengthquest.netlify.app"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs" 
