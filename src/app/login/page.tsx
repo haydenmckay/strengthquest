@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react'
-import { Logo } from '@/app/components/Logo'
+import { Logo } from '../components/Logo'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')

@@ -1,7 +1,8 @@
 [build]
   command = """
     npm ci &&
-    npm install -D tailwindcss@latest postcss@latest autoprefixer@latest &&
+    npm install -D tailwindcss postcss autoprefixer &&
+    npm install &&
     npm run build &&
     mkdir -p .next/server/chunks &&
     cp prisma/production/prod.db .next/server/chunks/

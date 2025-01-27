@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Logo } from '@/app/components/Logo';
+import { Logo } from '../components/Logo';
 
 interface User {
   id: string;
