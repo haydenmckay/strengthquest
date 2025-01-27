@@ -2,15 +2,19 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { jwtVerify } from 'jose'
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET)
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'default-secret-key')
 const COOKIE_NAME = process.env.COOKIE_NAME || 'strengthquest_session'
 
 // Add any public routes that don't require authentication
 const publicRoutes = [
   ...(process.env.NODE_ENV === 'development' ? ['/'] : []),
   '/login',
+  '/signup',
+  '/api/auth/login',
+  '/api/auth/signup',
   '/api/auth/magic-link',
   '/api/auth/verify',
+  '/api/auth/session',
   '/auth/verify'
 ]
 
@@ -35,7 +39,10 @@ export async function middleware(request: NextRequest) {
 
   try {
     // Verify token
-    await jwtVerify(token, JWT_SECRET)
+    const { payload } = await jwtVerify(token, JWT_SECRET)
+    if (!payload.userId) {
+      throw new Error('Invalid token payload')
+    }
     return NextResponse.next()
   } catch (error) {
     console.error('Auth error:', error)
