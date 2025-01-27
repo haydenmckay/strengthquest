@@ -1,5 +1,5 @@
 [build]
-  command = "npm run build"
+  command = "npm run build && mkdir -p .next/server/chunks && cp prisma/production/prod.db .next/server/chunks/"
   publish = ".next"
 
 [build.environment]
@@ -7,4 +7,11 @@
   NEXT_PRIVATE_TARGET = "server"
 
 [[plugins]]
-  package = "@netlify/plugin-nextjs" 
+  package = "@netlify/plugin-nextjs"
+
+# Ensure SQLite database is included
+[[plugins]]
+  package = "netlify-plugin-copy-file"
+  [plugins.inputs]
+    source = "prisma/production/prod.db"
+    target = ".next/server/chunks/prod.db" 

@@ -25,13 +25,12 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files
-.env*.local
 .env
-
-# but keep example env files and development/production configs
-!.env.development
-!.env.production
-!.env.*.example
+.env.*
+.env.local
+.env.development
+.env.test
+.env.production
 
 # vercel
 .vercel
