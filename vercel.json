@@ -11,5 +11,16 @@
       "memory": 1024,
       "maxDuration": 10
     }
+  },
+  "crons": [
+    {
+      "path": "/api/db-maintenance",
+      "schedule": "0 0 * * *"
+    }
+  ],
+  "mount": {
+    "/data": {
+      "source": "prisma"
+    }
   }
 } 

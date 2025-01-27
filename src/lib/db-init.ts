@@ -2,7 +2,11 @@ import fs from 'fs'
 import path from 'path'
 
 export function initDatabase() {
-  const dbPath = path.resolve(process.cwd(), 'prisma/prod.db')
+  // In production, use the mounted volume path
+  const dbPath = process.env.NODE_ENV === 'production'
+    ? '/data/prod.db'
+    : path.resolve(process.cwd(), 'prisma/prod.db')
+
   const dbDir = path.dirname(dbPath)
 
   // Ensure the directory exists
