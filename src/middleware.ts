@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { jwtVerify } from 'jose'
+import { rateLimit } from './lib/rateLimit'
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'default-secret-key')
 const COOKIE_NAME = process.env.COOKIE_NAME || 'strengthquest_session'
@@ -31,41 +32,55 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next()
   }
 
-  // Check for auth token
-  const token = request.cookies.get(COOKIE_NAME)?.value
-  if (!token) {
-    return redirectToLogin(request)
-  }
+  // Apply rate limiting to API routes
+  if (request.nextUrl.pathname.startsWith('/api/')) {
+    const ip = request.ip ?? '127.0.0.1'
+    const { isRateLimited, remaining } = rateLimit(ip)
 
-  try {
-    // Verify token
-    const { payload } = await jwtVerify(token, JWT_SECRET)
-    if (!payload.userId) {
-      throw new Error('Invalid token payload')
+    if (isRateLimited) {
+      return new NextResponse(JSON.stringify({ error: 'Too many requests' }), {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          'X-RateLimit-Remaining': remaining.toString(),
+        },
+      })
     }
-    return NextResponse.next()
-  } catch (error) {
-    console.error('Auth error:', error)
-    return redirectToLogin(request)
-  }
-}
 
-function redirectToLogin(request: NextRequest) {
-  const url = request.nextUrl.clone()
-  url.pathname = '/login'
-  url.search = `?from=${encodeURIComponent(request.nextUrl.pathname)}`
-  return NextResponse.redirect(url)
+    // Add rate limit headers to the response
+    const response = NextResponse.next()
+    response.headers.set('X-RateLimit-Remaining', remaining.toString())
+    return response
+  }
+
+  // Handle authentication for protected routes
+  if (request.nextUrl.pathname.startsWith('/dashboard') ||
+      request.nextUrl.pathname.startsWith('/profile')) {
+    const token = request.cookies.get(COOKIE_NAME)?.value
+
+    if (!token) {
+      const url = new URL('/login', request.url)
+      url.searchParams.set('from', request.nextUrl.pathname)
+      return NextResponse.redirect(url)
+    }
+
+    try {
+      await jwtVerify(token, JWT_SECRET)
+      return NextResponse.next()
+    } catch {
+      const url = new URL('/login', request.url)
+      url.searchParams.set('from', request.nextUrl.pathname)
+      return NextResponse.redirect(url)
+    }
+  }
+
+  return NextResponse.next()
 }
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except:
-     * 1. /api/auth/* (authentication routes)
-     * 2. /_next/* (Next.js internals)
-     * 3. /static/* (static files)
-     * 4. /*.* (files with extensions)
-     */
-    '/((?!api/auth|_next/static|_next/image|favicon.ico).*)'
+    '/api/:path*',
+    '/dashboard/:path*',
+    '/profile/:path*'
   ]
 } 
