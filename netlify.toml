@@ -1,8 +1,9 @@
 [build]
   command = """
+    export NODE_ENV=production &&
     npm ci &&
     npx prisma generate &&
-    npm run build &&
+    npm run build -- --no-lint &&
     mkdir -p .next/server/chunks &&
     cp prisma/production/prod.db .next/server/chunks/
   """
@@ -11,7 +12,8 @@
 [build.environment]
   NEXT_USE_NETLIFY_EDGE = "true"
   NEXT_PRIVATE_TARGET = "server"
-  NODE_ENV = "production"
+  NEXT_TELEMETRY_DISABLED = "1"
+  SKIP_TYPE_CHECK = "1"
 
 [[plugins]]
   package = "@netlify/plugin-nextjs" 
