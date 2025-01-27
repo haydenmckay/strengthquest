@@ -1,12 +1,5 @@
 [build]
-  command = """
-    npm ci &&
-    npm install -D tailwindcss@latest postcss@latest autoprefixer@latest &&
-    export NODE_ENV=production &&
-    npm run build &&
-    mkdir -p .next/server/chunks &&
-    cp prisma/production/prod.db .next/server/chunks/
-  """
+  command = "npm ci && npm run build && mkdir -p .next/server/chunks && cp prisma/production/prod.db .next/server/chunks/"
   publish = ".next"
 
 [build.environment]

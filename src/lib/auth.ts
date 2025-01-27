@@ -4,8 +4,9 @@ import { prisma } from './prisma'
 import bcrypt from 'bcryptjs'
 import { Resend } from 'resend'
 import { v4 as uuidv4 } from 'uuid'
+import { nanoid } from 'nanoid'
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET)
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'default-secret-key')
 const COOKIE_NAME = process.env.COOKIE_NAME || 'strengthquest_session'
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -101,9 +102,15 @@ export async function createSession(userId: string) {
 }
 
 export async function getSession() {
-  const token = cookies().get(COOKIE_NAME)?.value
+  const cookieStore = cookies()
+  const token = cookieStore.get(COOKIE_NAME)?.value
+  
   if (!token) return null
+  
+  return await verifyToken(token)
+}
 
+export async function verifyToken(token: string) {
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET)
     return payload.userId as string
@@ -132,5 +139,27 @@ export async function getCurrentUser() {
 }
 
 export async function logout() {
+  cookies().delete(COOKIE_NAME)
+}
+
+export async function createToken(payload: any) {
+  return await new SignJWT(payload)
+    .setProtectedHeader({ alg: 'HS256' })
+    .setJti(nanoid())
+    .setIssuedAt()
+    .setExpirationTime('24h')
+    .sign(JWT_SECRET)
+}
+
+export async function setUserCookie(token: string) {
+  cookies().set(COOKIE_NAME, token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 // 24 hours
+  })
+}
+
+export async function removeUserCookie() {
   cookies().delete(COOKIE_NAME)
 } 
