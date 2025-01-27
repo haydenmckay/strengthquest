@@ -19,6 +19,7 @@ export function initDatabase() {
   try {
     fs.accessSync(dbPath, fs.constants.W_OK)
   } catch (error) {
+    console.error('Database file is not writable:', error)
     fs.chmodSync(dbPath, 0o666)
   }
 
