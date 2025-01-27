@@ -9,7 +9,6 @@ const COOKIE_NAME = process.env.COOKIE_NAME || 'strengthquest_session'
 
 // Add any public routes that don't require authentication
 const publicRoutes = [
-  ...(process.env.NODE_ENV === 'development' ? ['/'] : []),
   '/login',
   '/signup',
   '/api/auth/login',
@@ -21,15 +20,10 @@ const publicRoutes = [
 ]
 
 // Add routes that require authentication
-const protectedRoutes = ['/settings', '/profile', '/workouts']
+const protectedRoutes = ['/', '/settings', '/profile', '/workouts']
 const authRoutes = ['/login', '/signup']
 
 export async function middleware(request: NextRequest) {
-  // Skip authentication in development
-  if (process.env.NODE_ENV === 'development') {
-    return NextResponse.next()
-  }
-
   const pathname = request.nextUrl.pathname
 
   // Allow public routes

@@ -17,10 +17,5 @@
       "path": "/api/db-maintenance",
       "schedule": "0 0 * * *"
     }
-  ],
-  "mount": {
-    "/data": {
-      "source": "prisma"
-    }
-  }
+  ]
 } 

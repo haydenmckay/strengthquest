@@ -20,13 +20,24 @@ export async function comparePasswords(password: string, hash: string) {
 
 export async function createMagicLink(email: string) {
   try {
+    console.log('Creating magic link for:', email)
+
+    // Verify database connection
+    try {
+      await prisma.$queryRaw`SELECT 1`
+      console.log('✓ Database connection verified')
+    } catch (error) {
+      console.error('Database connection failed:', error)
+      throw new Error('Database connection failed')
+    }
+
     // Create or get user
     const user = await prisma.user.upsert({
       where: { email },
       update: {},
       create: {
         email,
-        passwordHash: uuidv4(), // Generate a random string since we don't use passwords
+        passwordHash: uuidv4(),
         exercises: {
           create: [
             { name: 'Squat', isDefault: true, canUseBarbell: true },
@@ -40,40 +51,41 @@ export async function createMagicLink(email: string) {
         }
       }
     })
+    console.log('✓ User created/updated:', user.id)
 
     // Create token
     const token = await new SignJWT({ userId: user.id })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
-      .setExpirationTime('15m') // Magic links expire in 15 minutes
+      .setExpirationTime('15m')
       .sign(JWT_SECRET)
+    console.log('✓ Token created')
 
     // Create magic link
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL
+    if (!baseUrl) {
+      throw new Error('NEXT_PUBLIC_APP_URL is not configured')
+    }
     const magicLink = `${baseUrl}/auth/verify?token=${encodeURIComponent(token)}`
-
-    console.log('Sending magic link email:', {
-      to: email,
-      magicLink,
-      baseUrl,
-      environment: process.env.NODE_ENV
-    })
+    console.log('✓ Magic link created')
 
     // Send email
-    const result = await resend.emails.send({
-      from: 'StrengthQuest <no-reply@strengthquest.xyz>',
-      to: email,
-      subject: 'Sign in to StrengthQuest',
-      html: `
-        <h1>Welcome to StrengthQuest!</h1>
-        <p>Click the link below to sign in to your account. This link will expire in 15 minutes.</p>
-        <a href="${magicLink}" style="display: inline-block; background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 16px 0;">Sign in to StrengthQuest</a>
-        <p style="color: #666; font-size: 14px;">If the button doesn't work, copy and paste this link into your browser:</p>
-        <p style="color: #666; font-size: 14px;">${magicLink}</p>
-      `
-    })
-
-    if (!result?.id) {
+    try {
+      const result = await resend.emails.send({
+        from: 'StrengthQuest <no-reply@strengthquest.xyz>',
+        to: email,
+        subject: 'Sign in to StrengthQuest',
+        html: `
+          <h1>Welcome to StrengthQuest!</h1>
+          <p>Click the link below to sign in to your account. This link will expire in 15 minutes.</p>
+          <a href="${magicLink}" style="display: inline-block; background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 16px 0;">Sign in to StrengthQuest</a>
+          <p style="color: #666; font-size: 14px;">If the button doesn't work, copy and paste this link into your browser:</p>
+          <p style="color: #666; font-size: 14px;">${magicLink}</p>
+        `
+      })
+      console.log('✓ Email sent successfully')
+    } catch (error) {
+      console.error('Failed to send email:', error)
       throw new Error('Failed to send email')
     }
 
