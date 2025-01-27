@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     const userId = await verifyJWT(token);
     if (!userId) {
       return NextResponse.json(
-        { error: 'Invalid or expired token' },
+        { success: false, error: 'Invalid or expired token' },
         { status: 401 }
       );
     }
@@ -24,7 +24,7 @@ export async function POST(request: Request) {
     
     if (!sessionToken) {
       return NextResponse.json(
-        { error: 'Failed to create session' },
+        { success: false, error: 'Failed to create session' },
         { status: 500 }
       );
     }
@@ -32,11 +32,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ 
       success: true,
       token: sessionToken
-    });
+    }, { status: 200 });
   } catch (error) {
     console.error('Verification error:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
   }

@@ -26,9 +26,9 @@ export default function VerifyPage() {
           body: JSON.stringify({ token })
         })
 
-        const data = await res.json()
+        const data = await res.json().catch(() => ({ success: false, error: 'Invalid response from server' }));
 
-        if (!res.ok) {
+        if (!res.ok || !data.success) {
           throw new Error(data.error || 'Verification failed')
         }
 
