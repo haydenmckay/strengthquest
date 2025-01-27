@@ -107,10 +107,10 @@ export async function getSession() {
   
   if (!token) return null
   
-  return await verifyToken(token)
+  return await verifyJWT(token)
 }
 
-export async function verifyToken(token: string) {
+export async function verifyJWT(token: string) {
   try {
     const { payload } = await jwtVerify(token, JWT_SECRET)
     return payload.userId as string
