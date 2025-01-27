@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createSession, verifyToken } from '../../../../lib/auth';
+import { createSession, verifyJWT } from '../../../../lib/auth';
 
 export async function POST(request: Request) {
   try {
@@ -12,7 +12,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const userId = await verifyToken(token);
+    const userId = await verifyJWT(token);
     if (!userId) {
       return NextResponse.json(
         { error: 'Invalid or expired token' },

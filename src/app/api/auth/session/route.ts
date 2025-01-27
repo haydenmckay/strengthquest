@@ -13,12 +13,12 @@ export async function GET() {
     }
 
     const decoded = await verifyJWT(token.value);
-    if (!decoded || !decoded.userId) {
+    if (!decoded) {
       return NextResponse.json({ user: null });
     }
 
     const user = await prisma.user.findUnique({
-      where: { id: decoded.userId },
+      where: { id: decoded },
       select: {
         id: true,
         email: true,
