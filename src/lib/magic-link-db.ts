@@ -5,13 +5,16 @@ const createMagicLinkClient = () => {
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error('DATABASE_URL is not set');
 
-  // Parse and clean the URL
-  const urlObj = new URL(url);
-  const cleanUrl = `${urlObj.protocol}//${urlObj.username}@${urlObj.hostname}/db`;
-  
-  console.log('Magic Link DB URL:', cleanUrl.replace(/\/\/[^@]+@/, '//****@'));
+  console.log('Magic Link DB URL:', url.replace(/\/\/[^@]+@/, '//****@'));
 
-  return new PrismaClient();
+  return new PrismaClient({
+    log: ['query', 'error', 'warn'],
+    datasources: {
+      db: {
+        url
+      }
+    }
+  });
 };
 
 // Export a singleton instance
