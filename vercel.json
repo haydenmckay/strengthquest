@@ -1,15 +1,9 @@
 {
   "version": 2,
-  "buildCommand": null,
   "builds": [
     {
       "src": "package.json",
-      "use": "@vercel/next",
-      "config": {
-        "prisma": {
-          "generate": true
-        }
-      }
+      "use": "@vercel/next"
     }
   ],
   "functions": {
@@ -17,15 +11,5 @@
       "memory": 1024,
       "maxDuration": 10
     }
-  },
-  "crons": [
-    {
-      "path": "/api/db-maintenance",
-      "schedule": "0 0 * * *"
-    }
-  ],
-  "outputDirectory": ".next",
-  "env": {
-    "NEXT_TELEMETRY_DISABLED": "1"
   }
 } 
