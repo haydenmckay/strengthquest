@@ -13,7 +13,18 @@ const prismaClientSingleton = () => {
     log: ['query', 'error', 'warn'],
     datasources: {
       db: {
-        url: dbUrl
+        url: process.env.DATABASE_URL
+      }
+    },
+    // Add explicit connection configuration
+    __internal: {
+      engine: {
+        connectionString: process.env.DATABASE_URL,
+        cwd: process.cwd(),
+        allowTriggerPanic: true,
+        env: {
+          PRISMA_DISABLE_POOLING: "true"
+        }
       }
     }
   })
