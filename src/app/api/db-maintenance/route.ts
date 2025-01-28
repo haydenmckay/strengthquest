@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../../../lib/prisma';
 
 export async function GET() {
-  const prisma = new PrismaClient();
-  
   try {
     // Test database connection by running a simple query
     await prisma.$queryRaw`SELECT 1`;
@@ -20,7 +18,5 @@ export async function GET() {
       error: error instanceof Error ? error.message : 'Unknown error',
       timestamp: new Date().toISOString()
     }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 } 
