@@ -1,0 +1,5 @@
+[33m9f6fb24[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m)[m feat: implement magic link authentication with Resend email service
+[33me83ba62[m Enhance authentication flow with better error handling and logging
+[33mdb16e85[m Add Vercel volume mounting for persistent SQLite storage
+[33m373bb4c[m Fix database configuration for Vercel deployment
+[33madc87e5[m Fix magic link verification: improve error handling and JSON parsing
