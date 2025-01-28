@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": null,
+  "buildCommand": "npm run build",
   "env": {
     "DATABASE_URL": "libsql://strengthquest-haydenmckay.turso.io",
     "DATABASE_AUTH_TOKEN": "@turso-db-auth-token",
