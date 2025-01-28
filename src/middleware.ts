@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { jwtVerify } from 'jose'
 import { rateLimit } from './lib/rateLimit'
-import { cookies } from 'next/headers'
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'default-secret-key')
 const COOKIE_NAME = process.env.COOKIE_NAME || 'strengthquest_session'
@@ -52,26 +51,47 @@ export async function middleware(request: NextRequest) {
     return response
   }
 
-  const cookieStore = cookies()
-  const token = cookieStore.get(COOKIE_NAME)?.value
+  // Get the token from cookies
+  const token = request.cookies.get(COOKIE_NAME)?.value
 
   // Check if the route requires authentication
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
   const isAuthRoute = authRoutes.some(route => pathname.startsWith(route))
 
-  // Redirect to login if accessing protected route without token
-  if (isProtectedRoute && !token) {
-    const redirectUrl = new URL('/login', request.url)
-    redirectUrl.searchParams.set('redirect', pathname)
-    return NextResponse.redirect(redirectUrl)
-  }
+  try {
+    // Verify the token if it exists
+    if (token) {
+      const verified = await jwtVerify(token, JWT_SECRET)
+      const isValid = !!verified.payload.userId
+      
+      // Redirect to home if accessing auth routes with valid token
+      if (isAuthRoute && isValid) {
+        return NextResponse.redirect(new URL('/', request.url))
+      }
+      
+      // Allow access to protected routes with valid token
+      if (isProtectedRoute && isValid) {
+        return NextResponse.next()
+      }
+    }
 
-  // Redirect to home if accessing auth routes with token
-  if (isAuthRoute && token) {
-    return NextResponse.redirect(new URL('/', request.url))
-  }
+    // Redirect to login if accessing protected route without valid token
+    if (isProtectedRoute) {
+      const redirectUrl = new URL('/login', request.url)
+      redirectUrl.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(redirectUrl)
+    }
 
-  return NextResponse.next()
+    return NextResponse.next()
+  } catch (error) {
+    // If token verification fails, redirect to login for protected routes
+    if (isProtectedRoute) {
+      const redirectUrl = new URL('/login', request.url)
+      redirectUrl.searchParams.set('redirect', pathname)
+      return NextResponse.redirect(redirectUrl)
+    }
+    return NextResponse.next()
+  }
 }
 
 export const config = {
