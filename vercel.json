@@ -1,9 +1,15 @@
 {
   "version": 2,
+  "buildCommand": false,
   "builds": [
     {
       "src": "package.json",
-      "use": "@vercel/next"
+      "use": "@vercel/next",
+      "config": {
+        "prisma": {
+          "generate": true
+        }
+      }
     }
   ],
   "functions": {
@@ -18,7 +24,6 @@
       "schedule": "0 0 * * *"
     }
   ],
-  "buildCommand": "npm run build",
   "outputDirectory": ".next",
   "env": {
     "NEXT_TELEMETRY_DISABLED": "1"
