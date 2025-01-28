@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { prisma } from '../../../../lib/prisma';
+import { magicLinkDb } from '../../../../lib/magic-link-db';
 import { verifyJWT } from '../../../../lib/auth';
 import { getSession } from '../../../../lib/auth';
 
@@ -20,7 +20,7 @@ export async function GET() {
       return NextResponse.json({ user: null });
     }
 
-    const user = await prisma.user.findUnique({
+    const user = await magicLinkDb.user.findUnique({
       where: { id: decoded },
       select: {
         id: true,

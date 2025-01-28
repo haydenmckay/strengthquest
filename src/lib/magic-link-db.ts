@@ -9,7 +9,7 @@ const createMagicLinkClient = () => {
   const urlObj = new URL(url);
   
   // Force specific connection settings for magic link operations
-  const cleanUrl = `${urlObj.protocol}//${urlObj.username}@${urlObj.hostname}/db?sslmode=require&connection_limit=1`;
+  const cleanUrl = `${urlObj.protocol}//${urlObj.username}@${urlObj.hostname}/db?schema=public&sslmode=require&connection_limit=1&connect_timeout=30`;
   
   console.log('Magic Link DB URL:', cleanUrl.replace(/\/\/[^@]+@/, '//****@'));
 
