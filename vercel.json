@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": false,
+  "buildCommand": "prisma generate && prisma db push && next build",
   "builds": [
     {
       "src": "package.json",
