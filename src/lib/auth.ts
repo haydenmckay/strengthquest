@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers'
 import { jwtVerify, SignJWT } from 'jose'
 import { prisma } from './prisma'
+import { magicLinkDb } from './magic-link-db'
 import bcrypt from 'bcryptjs'
 import { Resend } from 'resend'
 import { v4 as uuidv4 } from 'uuid'
@@ -22,17 +23,17 @@ export async function createMagicLink(email: string) {
   try {
     console.log('Creating magic link for:', email)
 
-    // Verify database connection
+    // Verify database connection using dedicated client
     try {
-      await prisma.user.count()
+      await magicLinkDb.user.count()
       console.log('✓ Database connection verified')
     } catch (error) {
       console.error('Database connection failed:', error)
       throw new Error('Database connection failed')
     }
 
-    // Create or get user
-    const user = await prisma.user.upsert({
+    // Create or get user using dedicated client
+    const user = await magicLinkDb.user.upsert({
       where: { email },
       update: {},
       create: {
