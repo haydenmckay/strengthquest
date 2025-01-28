@@ -1,5 +1,9 @@
 import { PrismaClient } from '@prisma/client'
 
+// Debug: Log the database URL (but mask the auth token)
+const dbUrl = process.env.DATABASE_URL || '';
+console.log('Database URL format:', dbUrl.replace(/\/\/[^@]+@/, '//****@'));
+
 declare global {
   var prisma: PrismaClient | undefined
 }
