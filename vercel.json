@@ -5,21 +5,5 @@
       "src": "package.json",
       "use": "@vercel/next"
     }
-  ],
-  "functions": {
-    "app/api/**/*.ts": {
-      "memory": 1024,
-      "maxDuration": 10
-    }
-  },
-  "crons": [
-    {
-      "path": "/api/db-maintenance",
-      "schedule": "0 0 * * *"
-    }
-  ],
-  "outputDirectory": ".next",
-  "env": {
-    "NEXT_TELEMETRY_DISABLED": "1"
-  }
+  ]
 } 
