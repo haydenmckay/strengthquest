@@ -24,7 +24,7 @@ export async function createMagicLink(email: string) {
 
     // Verify database connection
     try {
-      await prisma.$queryRaw`SELECT 1`
+      await prisma.user.count()
       console.log('✓ Database connection verified')
     } catch (error) {
       console.error('Database connection failed:', error)
