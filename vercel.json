@@ -1,11 +1,23 @@
 {
   "version": 2,
+  "buildCommand": false,
   "builds": [
     {
       "src": "package.json",
-      "use": "@vercel/next"
+      "use": "@vercel/next",
+      "config": {
+        "prisma": {
+          "generate": true
+        }
+      }
     }
   ],
+  "functions": {
+    "app/api/**/*.ts": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  },
   "env": {
     "DATABASE_URL": "libsql://strengthquest-haydenmckay.turso.io",
     "DATABASE_AUTH_TOKEN": "@turso-db-auth-token"
