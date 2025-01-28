@@ -9,9 +9,8 @@ generator client {
 }
 
 datasource db {
-  provider = "libsql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
-  directUrl = env("DATABASE_URL")
 }
 
 model User {
