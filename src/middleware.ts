@@ -19,14 +19,16 @@ const publicRoutes = [
 ]
 
 // Add routes that require authentication
-const protectedRoutes = ['/', '/settings', '/profile', '/workouts']
+const protectedRoutes = ['/', '/settings', '/profile', '/workouts', '/dashboard']
 const authRoutes = ['/login', '/signup']
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
 
-  // Allow public routes
-  if (publicRoutes.includes(pathname)) {
+  // Allow public routes and static files
+  if (publicRoutes.includes(pathname) || 
+      pathname.startsWith('/_next/') || 
+      pathname.includes('.')) {
     return NextResponse.next()
   }
 
@@ -54,43 +56,37 @@ export async function middleware(request: NextRequest) {
   // Get the token from cookies
   const token = request.cookies.get(COOKIE_NAME)?.value
 
+  // If no token and trying to access any route (except public routes),
+  // redirect to login
+  if (!token) {
+    const redirectUrl = new URL('/login', request.url)
+    redirectUrl.searchParams.set('redirect', pathname)
+    return NextResponse.redirect(redirectUrl)
+  }
+
   // Check if the route requires authentication
   const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
   const isAuthRoute = authRoutes.some(route => pathname.startsWith(route))
 
   try {
-    // Verify the token if it exists
-    if (token) {
-      const verified = await jwtVerify(token, JWT_SECRET)
-      const isValid = !!verified.payload.userId
-      
-      // Redirect to home if accessing auth routes with valid token
-      if (isAuthRoute && isValid) {
-        return NextResponse.redirect(new URL('/', request.url))
-      }
-      
-      // Allow access to protected routes with valid token
-      if (isProtectedRoute && isValid) {
-        return NextResponse.next()
-      }
-    }
+    // Verify the token
+    const verified = await jwtVerify(token, JWT_SECRET)
+    const isValid = !!verified.payload.userId
 
-    // Redirect to login if accessing protected route without valid token
-    if (isProtectedRoute) {
+    if (!isValid) {
+      // If token is invalid, redirect to login
       const redirectUrl = new URL('/login', request.url)
       redirectUrl.searchParams.set('redirect', pathname)
       return NextResponse.redirect(redirectUrl)
     }
 
+    // Token is valid, allow access
     return NextResponse.next()
   } catch (error) {
-    // If token verification fails, redirect to login for protected routes
-    if (isProtectedRoute) {
-      const redirectUrl = new URL('/login', request.url)
-      redirectUrl.searchParams.set('redirect', pathname)
-      return NextResponse.redirect(redirectUrl)
-    }
-    return NextResponse.next()
+    // If token verification fails, redirect to login
+    const redirectUrl = new URL('/login', request.url)
+    redirectUrl.searchParams.set('redirect', pathname)
+    return NextResponse.redirect(redirectUrl)
   }
 }
 
