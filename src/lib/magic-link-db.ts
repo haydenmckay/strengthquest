@@ -3,15 +3,15 @@ import { PrismaClient } from '@prisma/client'
 // Create a dedicated Prisma client for magic link operations
 const createMagicLinkClient = () => {
   const url = process.env.DATABASE_URL;
-  if (!url) throw new Error('DATABASE_URL is not set');
-
-  console.log('Magic Link DB URL:', url.replace(/\/\/[^@]+@/, '//****@'));
+  const directUrl = process.env.DIRECT_URL;
+  
+  if (!url || !directUrl) throw new Error('DATABASE_URL or DIRECT_URL is not set');
 
   return new PrismaClient({
-    log: ['query', 'error', 'warn'],
+    log: ['error', 'warn'],
     datasources: {
       db: {
-        url
+        url: directUrl
       }
     }
   });

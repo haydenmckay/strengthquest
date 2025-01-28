@@ -10,10 +10,9 @@ generator client {
 }
 
 datasource db {
-  provider = "postgres"
+  provider = "sqlite"
   url = env("DATABASE_URL")
-  directUrl = env("DATABASE_URL")
-  relationMode = "foreignKeys"
+  directUrl = env("DIRECT_URL")
 }
 
 model User {

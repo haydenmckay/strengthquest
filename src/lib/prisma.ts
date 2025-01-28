@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import { createClient } from '@libsql/client';
 
 // Debug: Log the database URL (but mask the auth token)
 const dbUrl = process.env.DATABASE_URL || '';
@@ -10,13 +11,15 @@ declare global {
 
 const prismaClientSingleton = () => {
   const url = process.env.DATABASE_URL;
-  if (!url) throw new Error('DATABASE_URL is not set');
+  const directUrl = process.env.DIRECT_URL;
+  
+  if (!url || !directUrl) throw new Error('DATABASE_URL or DIRECT_URL is not set');
 
   return new PrismaClient({
-    log: ['query', 'error', 'warn'],
+    log: ['error', 'warn'],
     datasources: {
       db: {
-        url
+        url: directUrl
       }
     }
   })
