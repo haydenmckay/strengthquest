@@ -1,5 +1,4 @@
 import { PrismaClient } from '@prisma/client'
-import { createClient } from '@libsql/client';
 
 // Debug: Log the database URL (but mask the auth token)
 const dbUrl = process.env.DATABASE_URL || '';
@@ -10,16 +9,24 @@ declare global {
 }
 
 const prismaClientSingleton = () => {
-  const url = process.env.DATABASE_URL;
-  const directUrl = process.env.DIRECT_URL;
-  
-  if (!url || !directUrl) throw new Error('DATABASE_URL or DIRECT_URL is not set');
+  const isProduction = process.env.NODE_ENV === 'production'
+  const dbUrl = process.env.DATABASE_URL
+
+  // In production, we expect a Turso URL
+  // In development, we use a local SQLite file
+  const url = isProduction
+    ? dbUrl
+    : 'file:./prisma/dev.db'
+
+  if (isProduction && !dbUrl) {
+    throw new Error('DATABASE_URL environment variable is not set in production')
+  }
 
   return new PrismaClient({
     log: ['error', 'warn'],
     datasources: {
       db: {
-        url: directUrl
+        url
       }
     }
   })
