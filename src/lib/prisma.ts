@@ -9,22 +9,18 @@ declare global {
 }
 
 const prismaClientSingleton = () => {
+  const url = process.env.DATABASE_URL;
+  if (!url) throw new Error('DATABASE_URL is not set');
+
+  // Parse the URL to remove port if present
+  const urlObj = new URL(url);
+  const cleanUrl = `${urlObj.protocol}//${urlObj.username}@${urlObj.hostname}${urlObj.pathname}${urlObj.search}`;
+
   return new PrismaClient({
     log: ['query', 'error', 'warn'],
     datasources: {
       db: {
-        url: process.env.DATABASE_URL
-      }
-    },
-    // Add explicit connection configuration
-    __internal: {
-      engine: {
-        connectionString: process.env.DATABASE_URL,
-        cwd: process.cwd(),
-        allowTriggerPanic: true,
-        env: {
-          PRISMA_DISABLE_POOLING: "true"
-        }
+        url: cleanUrl
       }
     }
   })
