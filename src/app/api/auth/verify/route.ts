@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createSession, verifyJWT } from '../../../../lib/auth';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: Request) {
   try {
     console.log('Verifying magic link token...');
@@ -10,14 +12,14 @@ export async function GET(request: Request) {
 
     if (!token) {
       console.error('No token provided');
-      return NextResponse.redirect('/login?error=invalid_token');
+      return NextResponse.redirect(new URL('/login?error=invalid_token', request.url));
     }
 
     // Verify token
     const userId = await verifyJWT(token);
     if (!userId) {
       console.error('Invalid or expired token');
-      return NextResponse.redirect('/login?error=invalid_token');
+      return NextResponse.redirect(new URL('/login?error=invalid_token', request.url));
     }
     console.log('✓ Token verified for user:', userId);
 
