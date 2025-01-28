@@ -7,26 +7,11 @@ const createMagicLinkClient = () => {
 
   // Parse and clean the URL
   const urlObj = new URL(url);
+  const cleanUrl = `${urlObj.protocol}//${urlObj.username}@${urlObj.hostname}/db`;
   
-  return new PrismaClient({
-    log: ['error', 'warn', 'query'],
-    datasourceUrl: url,
-    datasources: {
-      db: {
-        url
-      }
-    },
-    // Add explicit connection configuration
-    __internal: {
-      engine: {
-        cwd: process.cwd(),
-        binaryTarget: 'debian-openssl-3.0.x',
-        engineConfig: {
-          noEngine: true
-        }
-      }
-    }
-  });
+  console.log('Magic Link DB URL:', cleanUrl.replace(/\/\/[^@]+@/, '//****@'));
+
+  return new PrismaClient();
 };
 
 // Export a singleton instance

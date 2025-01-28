@@ -7,13 +7,13 @@
 generator client {
   provider = "prisma-client-js"
   previewFeatures = ["driverAdapters"]
-  engineType = "binary"
 }
 
 datasource db {
   provider = "postgres"
   url = env("DATABASE_URL")
   directUrl = env("DATABASE_URL")
+  relationMode = "foreignKeys"
 }
 
 model User {
