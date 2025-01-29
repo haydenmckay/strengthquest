@@ -8,7 +8,13 @@ const MAX_REQUESTS = 3; // 3 requests per minute
 
 export async function POST(request: Request) {
   try {
-    // Check environment variables
+    // Check environment variables with detailed logging
+    console.log('Starting magic link request...');
+    console.log('Environment variables check:');
+    console.log('- RESEND_API_KEY:', process.env.RESEND_API_KEY ? `${process.env.RESEND_API_KEY.substring(0, 8)}...` : 'Not set');
+    console.log('- NEXT_PUBLIC_APP_URL:', process.env.NEXT_PUBLIC_APP_URL);
+    console.log('- NODE_ENV:', process.env.NODE_ENV);
+
     if (!process.env.RESEND_API_KEY) {
       console.error('Resend API key is not configured');
       return NextResponse.json(
@@ -25,16 +31,12 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log('Environment check:', {
-      RESEND_API_KEY: process.env.RESEND_API_KEY ? 'Set' : 'Not set',
-      NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
-      NODE_ENV: process.env.NODE_ENV
-    });
-
     const { email } = await request.json();
+    console.log('Received email request for:', email);
 
     // Validate email
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      console.error('Invalid email format:', email);
       return NextResponse.json(
         { error: 'Valid email is required' },
         { status: 400 }
@@ -45,6 +47,7 @@ export async function POST(request: Request) {
     const now = Date.now();
     const lastRequest = rateLimitMap.get(email) || 0;
     if (now - lastRequest < RATE_LIMIT_WINDOW) {
+      console.log('Rate limit exceeded for:', email);
       return NextResponse.json(
         { error: 'Please wait a minute before requesting another magic link' },
         { status: 429 }
@@ -53,9 +56,11 @@ export async function POST(request: Request) {
 
     // Update rate limit
     rateLimitMap.set(email, now);
+    console.log('Rate limit updated for:', email);
 
     // Create and send magic link
     try {
+      console.log('Attempting to create and send magic link...');
       await createMagicLink(email);
       console.log('Magic link sent successfully to:', email);
       return NextResponse.json({ success: true });

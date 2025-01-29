@@ -1,6 +1,4 @@
 import { PrismaClient } from '@prisma/client'
-import { createClient } from '@libsql/client'
-import { PrismaLibSQL } from '@prisma/adapter-libsql'
 
 // Debug: Log the database URL (but mask the auth token)
 const dbUrl = process.env.DATABASE_URL || '';
@@ -11,15 +9,7 @@ declare global {
 }
 
 const prismaClientSingleton = () => {
-  const libsql = createClient({
-    url: process.env.DATABASE_URL ?? '',
-    authToken: process.env.DATABASE_AUTH_TOKEN
-  })
-
-  const adapter = new PrismaLibSQL(libsql)
-  
   return new PrismaClient({
-    adapter,
     log: ['error', 'warn']
   })
 }

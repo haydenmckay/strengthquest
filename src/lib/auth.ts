@@ -73,15 +73,31 @@ export async function createMagicLink(email: string) {
     // Send email
     try {
       const result = await resend.emails.send({
-        from: 'StrengthQuest <no-reply@strengthquest.xyz>',
+        from: 'StrengthQuest <hello@strengthquest.xyz>',
+        replyTo: 'support@strengthquest.xyz',
         to: email,
         subject: 'Sign in to StrengthQuest',
+        headers: {
+          'List-Unsubscribe': '<mailto:unsubscribe@strengthquest.xyz>',
+          'X-Entity-Ref-ID': new Date().getTime().toString(),
+        },
+        tags: [
+          {
+            name: 'category',
+            value: 'authentication'
+          }
+        ],
         html: `
           <h1>Welcome to StrengthQuest!</h1>
           <p>Click the link below to sign in to your account. This link will expire in 15 minutes.</p>
           <a href="${magicLink}" style="display: inline-block; background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 16px 0;">Sign in to StrengthQuest</a>
           <p style="color: #666; font-size: 14px;">If the button doesn't work, copy and paste this link into your browser:</p>
           <p style="color: #666; font-size: 14px;">${magicLink}</p>
+          <p style="color: #666; font-size: 12px; margin-top: 24px;">
+            This email was sent from StrengthQuest. If you did not request this email, you can safely ignore it.
+            <br>
+            To unsubscribe from authentication emails, reply with "unsubscribe".
+          </p>
         `
       })
       console.log('✓ Email sent successfully')
