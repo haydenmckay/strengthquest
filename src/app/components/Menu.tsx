@@ -2,7 +2,14 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Bars3Icon, XMarkIcon, Cog6ToothIcon, UserCircleIcon, ClipboardDocumentListIcon } from '@heroicons/react/24/outline';
+import { 
+  Bars3Icon, 
+  XMarkIcon, 
+  Cog6ToothIcon, 
+  UserCircleIcon, 
+  ClipboardDocumentListIcon,
+  ArrowRightOnRectangleIcon 
+} from '@heroicons/react/24/outline';
 import { useAuth } from '../../lib/contexts/AuthContext';
 
 export const Menu = () => {
@@ -10,8 +17,17 @@ export const Menu = () => {
   const router = useRouter();
   const { user, loading } = useAuth();
 
-  // Don't render the menu if loading or not authenticated
-  if (loading || !user) return null;
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="fixed top-4 right-4 z-50 p-2 bg-white rounded-lg shadow-sm">
+        <div className="w-6 h-6 animate-pulse bg-gray-200 rounded" />
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated
+  if (!user) return null;
 
   const toggleMenu = () => {
     setIsOpen(!isOpen);
@@ -20,6 +36,15 @@ export const Menu = () => {
   const navigate = (path: string) => {
     router.push(path);
     setIsOpen(false);
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      window.location.replace('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   };
 
   return (
@@ -64,6 +89,14 @@ export const Menu = () => {
           >
             <Cog6ToothIcon className="w-5 h-5 text-gray-400 group-hover:text-blue-500" />
             <span className="font-medium">Settings</span>
+          </button>
+          <div className="my-1 border-t border-gray-100" />
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-3 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors duration-200 group"
+          >
+            <ArrowRightOnRectangleIcon className="w-5 h-5 text-red-400 group-hover:text-red-500" />
+            <span className="font-medium">Sign Out</span>
           </button>
         </nav>
       </div>

@@ -42,14 +42,14 @@ export default function VerifyPage() {
 
         // Store the session token if provided
         if (data.token) {
-          // You might want to store this in a cookie or handle it differently
           console.log('Session token received');
         }
 
         setStatus('success');
+        
+        // Use a hard redirect to ensure fresh state
         setTimeout(() => {
-          router.push('/');
-          router.refresh();
+          window.location.replace('/');
         }, 2000);
       } catch (error) {
         console.error('Verification error:', error)

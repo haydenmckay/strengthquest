@@ -37,7 +37,7 @@ export const DEFAULT_EXERCISES: Omit<Exercise, 'id'>[] = [
     weight: 0, 
     useBarbell: true, 
     canUseBarbell: true,
-    isSelected: true, 
+    isSelected: true,  // Pre-selected
     isCustom: false, 
     isDefault: true 
   },
@@ -48,18 +48,7 @@ export const DEFAULT_EXERCISES: Omit<Exercise, 'id'>[] = [
     weight: 0, 
     useBarbell: true, 
     canUseBarbell: true,
-    isSelected: true, 
-    isCustom: false, 
-    isDefault: true 
-  },
-  { 
-    name: 'Shoulder Press', 
-    sets: 3, 
-    reps: 5, 
-    weight: 0, 
-    useBarbell: true, 
-    canUseBarbell: true,
-    isSelected: false, 
+    isSelected: true,  // Pre-selected
     isCustom: false, 
     isDefault: true 
   },
@@ -68,7 +57,18 @@ export const DEFAULT_EXERCISES: Omit<Exercise, 'id'>[] = [
     sets: 3, 
     reps: 5, 
     weight: 0, 
-    useBarbell: true, 
+    useBarbell: true,  // Always use barbell
+    canUseBarbell: true,
+    isSelected: false, 
+    isCustom: false, 
+    isDefault: true 
+  },
+  { 
+    name: 'Shoulder Press', 
+    sets: 3, 
+    reps: 5, 
+    weight: 0, 
+    useBarbell: true,  // Always use barbell
     canUseBarbell: true,
     isSelected: false, 
     isCustom: false, 
@@ -79,7 +79,7 @@ export const DEFAULT_EXERCISES: Omit<Exercise, 'id'>[] = [
     sets: 3, 
     reps: 5, 
     weight: 0, 
-    useBarbell: true, 
+    useBarbell: true,  // Always use barbell
     canUseBarbell: true,
     isSelected: false, 
     isCustom: false, 
@@ -107,7 +107,7 @@ export const DEFAULT_EXERCISES: Omit<Exercise, 'id'>[] = [
     isSelected: false, 
     isCustom: false, 
     isDefault: true 
-  },
+  }
 ];
 
 export const RESISTANCE_BANDS = [

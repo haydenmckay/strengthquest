@@ -1,14 +1,14 @@
 import { cookies } from 'next/headers'
 import { jwtVerify, SignJWT } from 'jose'
 import { prisma } from './prisma'
-import { magicLinkDb } from './magic-link-db'
 import bcrypt from 'bcryptjs'
 import { Resend } from 'resend'
 import { v4 as uuidv4 } from 'uuid'
 import { nanoid } from 'nanoid'
+import { DEFAULT_EXERCISES } from '../app/lib/types'
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'default-secret-key')
-const COOKIE_NAME = process.env.COOKIE_NAME || 'strengthquest_session'
+const COOKIE_NAME = process.env.COOKIE_NAME || 'auth-token'
 const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function hashPassword(password: string) {
@@ -23,36 +23,37 @@ export async function createMagicLink(email: string) {
   try {
     console.log('Creating magic link for:', email)
 
-    // Verify database connection using dedicated client
-    try {
-      await magicLinkDb.user.count()
-      console.log('✓ Database connection verified')
-    } catch (error) {
-      console.error('Database connection failed:', error)
-      throw new Error('Database connection failed')
-    }
+    // Check if user exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email }
+    });
 
-    // Create or get user using dedicated client
-    const user = await magicLinkDb.user.upsert({
+    // Create or get user
+    const user = await prisma.user.upsert({
       where: { email },
       update: {},
       create: {
         email,
         passwordHash: uuidv4(),
+        weightUnit: 'kg',
+        barbellWeight: 20,
         exercises: {
-          create: [
-            { name: 'Squat', isDefault: true, canUseBarbell: true },
-            { name: 'Deadlift', isDefault: true, canUseBarbell: true },
-            { name: 'Bench Press', isDefault: true, canUseBarbell: true },
-            { name: 'Shoulder Press', isDefault: true, canUseBarbell: true },
-            { name: 'Power Clean', isDefault: true, canUseBarbell: true },
-            { name: 'Chin Ups', isDefault: true, canUseBarbell: false },
-            { name: 'Back Extension', isDefault: true, canUseBarbell: false }
-          ]
+          create: DEFAULT_EXERCISES.map(exercise => ({
+            name: exercise.name,
+            isDefault: exercise.isDefault || false,
+            canUseBarbell: exercise.canUseBarbell,
+            useBarbell: exercise.useBarbell,
+            isSelected: exercise.isSelected,
+            sets: exercise.sets,
+            reps: exercise.reps,
+            weight: exercise.weight || 0,
+            chinUpType: exercise.chinUpType
+          }))
         }
       }
-    })
-    console.log('✓ User created/updated:', user.id)
+    });
+    
+    console.log('✓ User created/updated:', user.id);
 
     // Create token
     const token = await new SignJWT({ userId: user.id })

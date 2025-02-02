@@ -3,23 +3,51 @@
 import { useState, useCallback, useEffect } from 'react';
 import { Exercise, DEFAULT_EXERCISES, WorkoutEntry } from '../types';
 import { useSettings } from '../contexts/SettingsContext';
+import { useAuth } from '../../../lib/contexts/AuthContext';
 import { v4 as uuidv4 } from 'uuid';
 
 export const useExercises = () => {
-  const [exercises, setExercises] = useState<Exercise[]>(() => {
-    const savedExercises = typeof window !== 'undefined' ? localStorage.getItem('exercises') : null;
-    return savedExercises 
-      ? JSON.parse(savedExercises).map((exercise: Exercise) => ({
-          ...exercise,
-          history: exercise.history?.map(entry => ({
-            ...entry,
-            date: new Date(entry.date)
-          }))
-        }))
-      : DEFAULT_EXERCISES.map(exercise => ({ ...exercise, id: uuidv4() }));
-  });
-
+  const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [loading, setLoading] = useState(true);
   const { barbellWeight, unit, convertWeight } = useSettings();
+  const { user } = useAuth();
+
+  // Fetch exercises from the database
+  useEffect(() => {
+    async function fetchExercises() {
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/exercises');
+        if (!response.ok) throw new Error('Failed to fetch exercises');
+        
+        const data = await response.json();
+        const exercisesWithHistory = data.exercises.map((exercise: any) => ({
+          ...exercise,
+          history: exercise.workoutEntries.map((entry: any) => ({
+            date: new Date(entry.date),
+            weight: entry.weight,
+            sets: entry.sets,
+            reps: entry.reps,
+            comment: entry.comments
+          }))
+        }));
+        
+        setExercises(exercisesWithHistory);
+      } catch (error) {
+        console.error('Failed to fetch exercises:', error);
+        // Load defaults if fetch fails
+        setExercises(DEFAULT_EXERCISES.map(exercise => ({ ...exercise, id: uuidv4() })));
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchExercises();
+  }, [user]);
 
   // Helper function to round to nearest valid plate combination
   const roundToValidIncrement = useCallback((weight: number): number => {
@@ -56,49 +84,118 @@ export const useExercises = () => {
     return ''; // For lbs we'll implement later
   }, [unit]);
 
-  // Save exercises to localStorage whenever they change
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('exercises', JSON.stringify(exercises));
-    }
-  }, [exercises]);
+  const addExercise = useCallback(async (name: string) => {
+    if (!user) return;
 
-  const addExercise = useCallback((name: string) => {
-    setExercises(prev => [
-      ...prev,
-      {
-        id: uuidv4(),
-        name,
+    try {
+      const response = await fetch('/api/exercises', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'create',
+          exercise: {
+            name,
+            canUseBarbell: true,
+            isDefault: false
+          }
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to create exercise');
+      
+      const { exercise } = await response.json();
+      setExercises(prev => [...prev, {
+        ...exercise,
         sets: 3,
         reps: 5,
         weight: 0,
         useBarbell: false,
-        canUseBarbell: true, // Allow custom exercises to use barbell by default
         isSelected: true,
         isCustom: true,
-      }
-    ]);
-  }, []);
+        history: []
+      }]);
+    } catch (error) {
+      console.error('Failed to add exercise:', error);
+    }
+  }, [user]);
 
-  const updateExercise = useCallback((id: string, updates: Partial<Exercise>) => {
-    setExercises(prev => 
-      prev.map(exercise => 
-        exercise.id === id ? { ...exercise, ...updates } : exercise
-      )
-    );
-  }, []);
+  const updateExercise = useCallback(async (id: string, updates: Partial<Exercise>) => {
+    if (!user) return;
 
-  const deleteExercise = useCallback((id: string) => {
-    setExercises(prev => prev.filter(exercise => exercise.id !== id));
-  }, []);
+    try {
+      const response = await fetch('/api/exercises', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'update',
+          exercise: { id, ...updates }
+        })
+      });
 
-  const toggleExercise = useCallback((id: string) => {
+      if (!response.ok) throw new Error('Failed to update exercise');
+
+      setExercises(prev => 
+        prev.map(exercise => 
+          exercise.id === id ? { ...exercise, ...updates } : exercise
+        )
+      );
+    } catch (error) {
+      console.error('Failed to update exercise:', error);
+    }
+  }, [user]);
+
+  const deleteExercise = useCallback(async (id: string) => {
+    if (!user) return;
+
+    try {
+      const response = await fetch('/api/exercises', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'delete',
+          exercise: { id }
+        })
+      });
+
+      if (!response.ok) throw new Error('Failed to delete exercise');
+
+      setExercises(prev => prev.filter(exercise => exercise.id !== id));
+    } catch (error) {
+      console.error('Failed to delete exercise:', error);
+    }
+  }, [user]);
+
+  const toggleExercise = useCallback(async (id: string) => {
+    // Update local state immediately for better UX
     setExercises(prev => 
       prev.map(exercise => 
         exercise.id === id ? { ...exercise, isSelected: !exercise.isSelected } : exercise
       )
     );
-  }, []);
+
+    // Then sync with database
+    try {
+      const exercise = exercises.find(e => e.id === id);
+      if (!exercise) return;
+
+      const response = await fetch(`/api/exercises/${id}/toggle-selection`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!response.ok) {
+        // If the update fails, revert the local state
+        setExercises(prev => 
+          prev.map(exercise => 
+            exercise.id === id ? { ...exercise, isSelected: !exercise.isSelected } : exercise
+          )
+        );
+        throw new Error('Failed to update exercise');
+      }
+    } catch (error) {
+      console.error('Failed to update exercise:', error);
+    }
+  }, [exercises]);
 
   const calculateTotalWeight = useCallback((exercise: Exercise) => {
     if (exercise.name === 'Chin Ups') {
@@ -127,55 +224,77 @@ export const useExercises = () => {
     return roundToValidIncrement(exercise.weight || 0);
   }, [barbellWeight, unit, convertWeight, roundToValidIncrement]);
 
-  const saveWorkout = useCallback((id: string, date: Date, comment?: string) => {
-    setExercises((prev) =>
-      prev.map((exercise) => {
-        if (exercise.id !== id) return exercise;
+  const saveWorkout = useCallback(async (id: string, date: Date, comment?: string) => {
+    if (!user) return;
 
-        const totalWeight = calculateTotalWeight(exercise);
+    const exercise = exercises.find(e => e.id === id);
+    if (!exercise) return;
+
+    const totalWeight = calculateTotalWeight(exercise);
+    const weightInKg = unit === 'lbs' ? convertWeight(totalWeight, 'lbs', 'kg') : totalWeight;
+
+    if (totalWeight !== 0 || (exercise.name === 'Chin Ups' && exercise.chinUpType === 'bodyweight')) {
+      try {
+        const response = await fetch('/api/exercises', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'save_workout',
+            exercise: {
+              id,
+              date,
+              weight: weightInKg,
+              sets: exercise.sets,
+              reps: exercise.reps,
+              comment
+            }
+          })
+        });
+
+        if (!response.ok) throw new Error('Failed to save workout');
+
+        const { entry } = await response.json();
         
-        // Convert weight to kg for storage if currently in lbs
-        const weightInKg = unit === 'lbs' ? convertWeight(totalWeight, 'lbs', 'kg') : totalWeight;
+        setExercises(prev =>
+          prev.map(ex => {
+            if (ex.id !== id) return ex;
+            
+            const newEntry = {
+              date,
+              weight: weightInKg,
+              sets: exercise.sets,
+              reps: exercise.reps,
+              comment
+            };
 
-        // Only add to history if there's a weight value or it's bodyweight chin-ups
-        if (totalWeight !== 0 || (exercise.name === 'Chin Ups' && exercise.chinUpType === 'bodyweight')) {
-          const newEntry: WorkoutEntry = {
-            date,
-            weight: weightInKg,
-            sets: exercise.sets,
-            reps: exercise.reps,
-            comment
-          };
+            const existingEntryIndex = ex.history?.findIndex(
+              entry => entry.date.toDateString() === date.toDateString()
+            );
 
-          // Check if we already have an entry for this date
-          const existingEntryIndex = exercise.history?.findIndex(
-            entry => entry.date.toDateString() === date.toDateString()
-          );
+            let newHistory = [...(ex.history || [])];
+            
+            if (existingEntryIndex !== undefined && existingEntryIndex >= 0) {
+              newHistory[existingEntryIndex] = newEntry;
+            } else {
+              newHistory = [newEntry, ...newHistory];
+            }
 
-          let newHistory = [...(exercise.history || [])];
-          
-          if (existingEntryIndex !== undefined && existingEntryIndex >= 0) {
-            // Update existing entry
-            newHistory[existingEntryIndex] = newEntry;
-          } else {
-            // Add new entry
-            newHistory = [newEntry, ...newHistory];
-          }
-
-          return {
-            ...exercise,
-            history: newHistory,
-            lastSaved: date,
-          };
-        }
-
-        return exercise;
-      })
-    );
-  }, [calculateTotalWeight, unit, convertWeight]);
+            return {
+              ...ex,
+              history: newHistory,
+              lastSaved: date,
+            };
+          })
+        );
+      } catch (error) {
+        console.error('Failed to save workout:', error);
+      }
+    }
+  }, [exercises, calculateTotalWeight, unit, convertWeight, user]);
 
   return {
     exercises,
+    loading,
     addExercise,
     updateExercise,
     deleteExercise,

@@ -30,24 +30,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    // Check session on mount
-    const checkSession = async () => {
+    let mounted = true;
+
+    async function checkSession() {
       try {
-        const response = await fetch('/api/auth/session');
+        const response = await fetch('/api/auth/session', {
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        });
+        
+        if (!mounted) return;
+        
         const data = await response.json();
         
         if (data.user) {
           setUser(data.user);
+        } else {
+          setUser(null);
         }
       } catch (err) {
+        if (!mounted) return;
         setError('Failed to fetch session');
         console.error('Session check error:', err);
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
-    };
+    }
 
     checkSession();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const value = {
