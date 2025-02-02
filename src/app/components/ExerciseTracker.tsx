@@ -11,6 +11,16 @@ import "react-datepicker/dist/react-datepicker.css";
 import { Logo } from './Logo';
 import { useSettings } from '../lib/contexts/SettingsContext';
 
+const EXERCISE_ORDER = [
+  'Squat',
+  'Deadlift',
+  'Bench Press',
+  'Shoulder Press',
+  'Power Clean',
+  'Chin Ups',
+  'Back Extension'
+];
+
 export const ExerciseTracker = () => {
   const { exercises, addExercise, updateExercise, deleteExercise, toggleExercise, calculateTotalWeight, saveWorkout } = useExercises();
   const { unit, barbellWeight, convertWeight, displayWeight } = useSettings();
@@ -256,6 +266,23 @@ export const ExerciseTracker = () => {
     saveWorkout(exerciseId, selectedDate, comment);
   };
 
+  const sortedExercises = [...exercises].sort((a, b) => {
+    const aIndex = EXERCISE_ORDER.indexOf(a.name);
+    const bIndex = EXERCISE_ORDER.indexOf(b.name);
+    
+    // If both exercises are in the order list, sort by that order
+    if (aIndex !== -1 && bIndex !== -1) {
+      return aIndex - bIndex;
+    }
+    
+    // If only one exercise is in the order list, put it first
+    if (aIndex !== -1) return -1;
+    if (bIndex !== -1) return 1;
+    
+    // For custom exercises not in the list, sort alphabetically
+    return a.name.localeCompare(b.name);
+  });
+
   return (
     <div className="min-h-screen bg-white p-4">
       <div className="max-w-6xl mx-auto">
@@ -422,7 +449,7 @@ export const ExerciseTracker = () => {
                 ) : (
                   <>
                     <div className="flex-1 flex flex-wrap gap-2">
-                      {exercises.map((exercise) => (
+                      {sortedExercises.map((exercise) => (
                         <button
                           key={exercise.id}
                           onClick={() => toggleExercise(exercise.id)}
@@ -480,7 +507,7 @@ export const ExerciseTracker = () => {
         </div>
 
         <div className="grid gap-6">
-          {exercises
+          {sortedExercises
             .filter((exercise) => exercise.isSelected)
             .map((exercise) => (
             <div

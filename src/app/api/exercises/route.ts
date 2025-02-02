@@ -19,7 +19,10 @@ export async function GET() {
         workoutEntries: {
           orderBy: { date: 'desc' }
         }
-      }
+      },
+      orderBy: [
+        { name: 'asc' }  // Order alphabetically by name
+      ]
     });
 
     return NextResponse.json({ exercises });
