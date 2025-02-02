@@ -21,7 +21,13 @@ export const useExercises = () => {
       }
 
       try {
-        const response = await fetch('/api/exercises');
+        const response = await fetch(`/api/exercises?t=${Date.now()}`, {
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
         if (!response.ok) throw new Error('Failed to fetch exercises');
         
         const data = await response.json();
